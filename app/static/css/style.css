@@ -784,6 +784,169 @@ body {
   position: relative;
 }
 
+/* ── Live Focus Timer HUD (Active Quest Mode) ── */
+.focus-hud-card {
+  background: linear-gradient(135deg, rgba(22, 26, 46, 0.9), rgba(17, 19, 31, 0.95));
+  border: 1px solid var(--border-glow);
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.2);
+  transition: var(--transition-normal);
+}
+
+.focus-hud-idle {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.25rem;
+}
+
+.focus-hud-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-subtle);
+  display: grid;
+  place-items: center;
+  font-size: 1.5rem;
+}
+
+.focus-hud-active {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.focus-hud-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.focus-quest-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text-highlight);
+}
+
+.pulse-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--accent-emerald);
+  box-shadow: 0 0 10px var(--accent-emerald);
+  animation: pulseGreen 1.5s infinite;
+}
+
+@keyframes pulseGreen {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.focus-quest-cat {
+  padding: 0.2rem 0.6rem;
+  border-radius: 12px;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid var(--accent-secondary);
+  color: var(--accent-secondary);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.focus-timer-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.25rem 0;
+}
+
+.focus-digital-clock {
+  font-family: var(--font-mono);
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--text-highlight);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+  line-height: 1;
+}
+
+.focus-sub-status {
+  font-size: 0.78rem;
+  color: var(--accent-secondary);
+  margin-top: 0.35rem;
+  letter-spacing: 0.05em;
+}
+
+.focus-progress-track {
+  width: 100%;
+  height: 8px;
+  background: var(--bg-tertiary);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.focus-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-secondary), var(--accent-primary));
+  border-radius: 6px;
+  transition: width 1s linear;
+  box-shadow: 0 0 12px var(--accent-secondary-glow);
+}
+
+.focus-hud-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+/* Quest Item Glowing when Active */
+.quest-item.is-focusing {
+  border-color: var(--accent-secondary);
+  box-shadow: 0 0 15px var(--accent-secondary-glow);
+  background: rgba(6, 182, 212, 0.08);
+}
+
+.btn-focus-start {
+  background: rgba(6, 182, 212, 0.15);
+  color: var(--accent-secondary);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  transition: var(--transition-fast);
+}
+
+.btn-focus-start:hover {
+  background: var(--accent-secondary);
+  color: #000;
+  box-shadow: 0 0 10px var(--accent-secondary-glow);
+}
+
+.btn-focus-start.active {
+  background: var(--accent-secondary);
+  color: #000;
+  animation: pulseCyan 1.5s infinite;
+}
+
+@keyframes pulseCyan {
+  0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.7); }
+  70% { box-shadow: 0 0 0 8px rgba(6, 182, 212, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+}
+
+/* Form Controls & Animations */
 .form-group {
   margin-bottom: 1rem;
 }
