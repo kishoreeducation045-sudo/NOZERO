@@ -292,7 +292,7 @@
         <span>⚔️ Create New Quest</span>
         <button class="btn-icon-action" onclick="closeModal('modalNewQuest')">✕</button>
       </div>
-      <form id="formNewQuest">
+      <form id="formNewQuest" onsubmit="createNewQuestFromForm(event); return false;">
         <div class="form-group">
           <label class="form-label" for="newGoalTitle">Quest Title</label>
           <input type="text" id="newGoalTitle" class="form-control" placeholder="e.g., Implement OAuth2 Microservice" required />

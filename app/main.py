@@ -31,15 +31,12 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Safe database table initialization on startup (skip blocking in serverless cold starts)
-    if not settings.is_vercel:
-        try:
-            import asyncio
-            async with asyncio.timeout(3.0):
-                async with engine.begin() as conn:
-                    await conn.run_sync(Base.metadata.create_all)
-        except Exception as e:
-            logger.warning("Database schema check skipped during startup: %s", e)
+    # Safe database table initialization on startup
+    try:
+        from app.db.session import ensure_tables
+        await ensure_tables()
+    except Exception as e:
+        logger.warning("Startup schema check note: %s", e)
     yield
     try:
         await engine.dispose()

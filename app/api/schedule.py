@@ -21,19 +21,27 @@ async def get_today_schedule(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
-    today = date.today()
-    start = datetime(today.year, today.month, today.day, tzinfo=timezone.utc)
-    end = start + timedelta(days=1)
+    now = datetime.now(timezone.utc)
+    start = datetime(now.year, now.month, now.day, 0, 0, 0, tzinfo=timezone.utc) - timedelta(hours=12)
+    end = datetime(now.year, now.month, now.day, 23, 59, 59, tzinfo=timezone.utc) + timedelta(hours=12)
     result = await db.execute(
         select(ScheduleItem).where(
             and_(
                 ScheduleItem.user_id == current_user.id,
                 ScheduleItem.start_time >= start,
-                ScheduleItem.start_time < end,
+                ScheduleItem.start_time <= end,
             )
         ).order_by(ScheduleItem.start_time)
     )
-    return [ScheduleItemOut.model_validate(s) for s in result.scalars().all()]
+    items = result.scalars().all()
+    if not items:
+        result_all = await db.execute(
+            select(ScheduleItem).where(
+                ScheduleItem.user_id == current_user.id
+            ).order_by(ScheduleItem.start_time.desc()).limit(20)
+        )
+        items = list(reversed(result_all.scalars().all()))
+    return [ScheduleItemOut.model_validate(s) for s in items]
 
 
 @router.post("", response_model=ScheduleItemOut, status_code=status.HTTP_201_CREATED)

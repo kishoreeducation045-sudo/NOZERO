@@ -674,13 +674,16 @@ async function deleteQuest(goalId) {
 }
 
 async function createNewQuestFromForm(e) {
-  e.preventDefault();
-  const title = document.getElementById('newGoalTitle').value.trim();
-  const prio = document.getElementById('newGoalPriority').value;
+  if (e) {
+    if (e.preventDefault) e.preventDefault();
+    if (e.stopPropagation) e.stopPropagation();
+  }
+  const title = (document.getElementById('newGoalTitle').value || '').trim();
+  const prio = document.getElementById('newGoalPriority').value || 'medium';
   const mins = parseInt(document.getElementById('newGoalMins').value, 10) || 25;
   const cat = document.getElementById('newGoalCat').value || 'Coding';
 
-  if (!title) return;
+  if (!title) return false;
 
   try {
     // 1. Create Goal in database

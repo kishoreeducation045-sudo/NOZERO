@@ -40,8 +40,28 @@ AsyncSessionLocal = async_sessionmaker(
     autocommit=False,
 )
 
+_tables_initialized = False
+
+
+async def ensure_tables():
+    """Ensure database tables are created (especially for SQLite or fresh DB instances)."""
+    global _tables_initialized
+    if not _tables_initialized:
+        try:
+            from app.db.base import Base
+            import app.models  # noqa: F401 - ensure all models are registered on Base
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            _tables_initialized = True
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning("ensure_tables note: %s", e)
+
 
 async def get_db() -> AsyncSession:  # type: ignore[return]
+    if not _tables_initialized:
+        await ensure_tables()
+
     async with AsyncSessionLocal() as session:
         try:
             yield session
