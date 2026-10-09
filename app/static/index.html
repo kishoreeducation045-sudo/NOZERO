@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Real-Life Dungeon Master — Questlog & Productivity Console</title>
+  
+  <!-- SEO Best Practices -->
+  <meta name="description" content="A gamified, deterministic productivity telemetry daemon and AI Dungeon Master coaching platform.">
+  <meta name="keywords" content="Productivity, RPG, Dungeon Master, Questlog, Telemetry, AI Coach, FastApi, Groq">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+  <!-- Top App Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="/" class="brand-logo" id="brandLogo">
+        <div class="brand-icon">⚔️</div>
+        <div>
+          <h1 class="brand-title">Questlog</h1>
+          <div class="brand-subtitle">Real-Life Dungeon Master</div>
+        </div>
+      </a>
+
+      <!-- Quick Stats in Header -->
+      <div class="header-hero-stats">
+        <div class="hero-stat-badge">
+          <span class="stat-icon">🔥</span>
+          <span>Streak: <span class="stat-val" id="topStreakBadge">4 Days</span></span>
+        </div>
+        <div class="hero-stat-badge">
+          <span class="stat-icon">🛡️</span>
+          <span>Rank: <span class="stat-val" style="color: var(--accent-secondary);">Grandmaster</span></span>
+        </div>
+        <div class="hero-stat-badge">
+          <span class="stat-icon">⚡</span>
+          <span>Score: <span class="stat-val" id="topScoreBadge">50</span>/100</span>
+        </div>
+        <button class="btn-auth-user" id="btnUserMenu" onclick="openModal('modalAuth')">
+          <span>🧙‍♂️</span>
+          <span id="heroHeaderName">Adventurer</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main App Layout -->
+  <main class="app-main">
+
+    <!-- ── LEFT COLUMN: CHARACTER & SCORING ── -->
+    <section class="left-col">
+      <!-- Character Card -->
+      <div class="glass-card character-card">
+        <div class="avatar-frame">
+          <div class="avatar-img">🧙‍♂️</div>
+        </div>
+        <h2 class="hero-name" id="heroName">Hero of the Realm</h2>
+        <div class="hero-class" id="heroLevel">Level 3 Paladin</div>
+
+        <!-- XP Progress Bar -->
+        <div class="xp-container">
+          <div class="xp-label-row">
+            <span>Experience (XP)</span>
+            <span id="xpProgress">60%</span>
+          </div>
+          <div class="xp-bar-track">
+            <div class="xp-bar-fill" id="xpFill" style="width: 60%;"></div>
+          </div>
+        </div>
+
+        <!-- Deterministic Circular Score Gauge -->
+        <div class="score-gauge-container">
+          <svg class="score-svg-gauge" viewBox="0 0 140 140">
+            <defs>
+              <linearGradient id="scoreGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#06b6d4" />
+              </linearGradient>
+            </defs>
+            <circle class="gauge-bg" cx="70" cy="70" r="60" />
+            <circle class="gauge-progress" id="gaugeProgress" cx="70" cy="70" r="60" />
+          </svg>
+          <div class="score-center-text">
+            <div class="score-number" id="scoreDisplay">50</div>
+            <div class="score-label">Campaign Score</div>
+          </div>
+        </div>
+
+        <!-- Mini Stats Grid -->
+        <div class="stat-mini-grid">
+          <div class="mini-stat-card">
+            <div class="mini-stat-val" id="prodTimeMini" style="color: var(--accent-emerald);">0m</div>
+            <div class="mini-stat-lbl">Productive Focus</div>
+          </div>
+          <div class="mini-stat-card">
+            <div class="mini-stat-val" id="distractTimeMini" style="color: var(--accent-crimson);">0m</div>
+            <div class="mini-stat-lbl">Distraction</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Score Event Audit Trail -->
+      <div class="glass-card">
+        <div class="card-title">
+          <span>📜 Score Audit Ledger</span>
+          <span style="font-size: 0.75rem; color: var(--accent-secondary);">Deterministic</span>
+        </div>
+        <div class="ledger-list" id="ledgerList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- ── CENTER COLUMN: QUESTS & DAILY TIMELINE ── -->
+    <section class="center-col">
+      
+      <!-- Quests Section -->
+      <div class="glass-card" style="margin-bottom: 1.75rem;">
+        <div class="section-header-row">
+          <div class="card-title" style="margin-bottom: 0;">
+            <span>⚔️ Active Quests</span>
+          </div>
+          <button class="btn-primary" onclick="openModal('modalNewQuest')">
+            <span>+</span> <span>New Quest</span>
+          </button>
+        </div>
+
+        <div class="quest-list" id="questList">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <!-- Daily Schedule & Dynamic Shifter -->
+      <div class="glass-card">
+        <div class="section-header-row">
+          <div class="card-title" style="margin-bottom: 0;">
+            <span>📅 Tactical Daily Itinerary</span>
+          </div>
+          <button class="btn-secondary" onclick="triggerAiScheduleGen()">
+            <span>🧙‍♂️ AI Auto-Plan</span>
+          </button>
+        </div>
+
+        <!-- Chronological Timeline -->
+        <div class="timeline-container" id="timelineList">
+          <!-- Populated by JS -->
+        </div>
+
+        <!-- Dynamic Schedule Overrun Shifter -->
+        <div class="shifter-widget">
+          <div>
+            <div class="shifter-label">⚡ <strong>Overrun Shifter (PRD §8)</strong></div>
+            <div style="font-size: 0.72rem; color: var(--text-muted);">Overran a block? Slide remaining items forward without failing.</div>
+          </div>
+          <div class="shifter-controls">
+            <select id="shiftMinutesSelect" class="form-control" style="width: auto; padding: 0.35rem 0.6rem; font-size: 0.8rem;">
+              <option value="15">+15 mins</option>
+              <option value="30" selected>+30 mins</option>
+              <option value="45">+45 mins</option>
+              <option value="60">+60 mins</option>
+            </select>
+            <button class="btn-secondary" onclick="triggerScheduleShift()">Shift</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Real-time Telemetry Simulator for Judges/Evaluators -->
+      <div class="glass-card" style="margin-top: 1.75rem; background: rgba(14, 18, 36, 0.6);">
+        <div class="card-title" style="margin-bottom: 0.6rem;">
+          <span>📡 Telemetry Ingestion Simulator</span>
+          <span style="font-size: 0.7rem; color: var(--text-muted);">Simulate Heartbeats</span>
+        </div>
+        <div style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.75rem;">
+          Simulate real-time window & domain tracking signals from the Desktop App or Chrome Extension:
+        </div>
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <button class="btn-secondary" onclick="simulateHeartbeats('coding')">💻 Ingest IDE Focus (VS Code)</button>
+          <button class="btn-secondary" onclick="simulateHeartbeats('dsa')">🧩 Ingest DSA (LeetCode)</button>
+          <button class="btn-secondary" onclick="simulateHeartbeats('distraction')" style="color: var(--accent-crimson); border-color: rgba(239,68,68,0.3);">🛑 Ingest Distraction (YouTube)</button>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── RIGHT COLUMN: AI VOICE CONSOLE & ANALYTICS ── -->
+    <section class="right-col">
+      <!-- Dungeon Master Voice & Chat Console -->
+      <div class="glass-card ai-console-card">
+        <div class="card-title">
+          <span>🎙️ Dungeon Master AI</span>
+          <span style="font-size: 0.7rem; color: var(--accent-emerald);">● Groq LPU Online</span>
+        </div>
+
+        <!-- Chat Conversation Area -->
+        <div class="ai-chat-history" id="aiChatHistory">
+          <div class="chat-bubble ai">
+            ⚔️ Greetings, Adventurer! I am your real-time Dungeon Master. Speak or type to manage your quests, inquire about today's focus, or command me to schedule your campaign.
+          </div>
+        </div>
+
+        <!-- Chat / Voice Input Controls -->
+        <div class="ai-input-container">
+          <button class="btn-mic-record" id="btnMic" title="Click to speak (Web Speech / AssemblyAI)" onclick="toggleSpeechRecognition()">
+            🎙️
+          </button>
+          <input type="text" id="aiInputText" class="ai-text-input" placeholder="Type or speak a quest..." />
+          <button class="btn-primary" style="padding: 0.65rem 0.9rem;" onclick="sendAiMessage()">
+            <span>➤</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Telemetry Analytics Summary -->
+      <div class="glass-card" style="margin-top: 1.5rem;">
+        <div class="card-title">
+          <span>📊 Telemetry Analytics</span>
+          <a href="/docs" target="_blank" style="font-size: 0.72rem; color: var(--accent-secondary); text-decoration: none;">API Docs ↗</a>
+        </div>
+
+        <!-- Peak Flow State Banner -->
+        <div id="focusBanner" style="padding: 0.65rem 0.85rem; background: rgba(6, 182, 212, 0.1); border: 1px solid var(--accent-secondary); border-radius: 8px; font-size: 0.8rem; color: var(--accent-secondary); margin-bottom: 0.85rem; display: none;">
+          🌟 Peak Flow State: 10:00 – 12:30
+        </div>
+
+        <!-- Top Applications List -->
+        <div style="font-size: 0.78rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.45rem;">TOP APPLICATIONS TODAY:</div>
+        <div id="topAppsList">
+          <div style="font-size: 0.78rem; color: var(--text-dim); padding: 0.5rem 0;">No application telemetry recorded yet.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── MODAL: CREATE NEW QUEST ── -->
+  <div class="modal-backdrop" id="modalNewQuest">
+    <div class="modal-content">
+      <div class="card-title">
+        <span>⚔️ Create New Quest</span>
+        <button class="btn-icon-action" onclick="closeModal('modalNewQuest')">✕</button>
+      </div>
+      <form id="formNewQuest">
+        <div class="form-group">
+          <label class="form-label" for="newGoalTitle">Quest Title</label>
+          <input type="text" id="newGoalTitle" class="form-control" placeholder="e.g., Implement OAuth2 Microservice" required />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newGoalPriority">Priority Level</label>
+          <select id="newGoalPriority" class="form-control">
+            <option value="critical">Critical (+15 Score PTS)</option>
+            <option value="high" selected>High (+15 Score PTS)</option>
+            <option value="medium">Medium (+10 Score PTS)</option>
+            <option value="low">Low (+10 Score PTS)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newGoalMins">Estimated Duration (Minutes)</label>
+          <input type="number" id="newGoalMins" class="form-control" value="45" min="5" max="480" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="newGoalCat">Category</label>
+          <select id="newGoalCat" class="form-control">
+            <option value="Coding" selected>Coding</option>
+            <option value="DSA">DSA & Algorithms</option>
+            <option value="Study">Study / Research</option>
+            <option value="Work">Work / Productivity</option>
+            <option value="Meeting">Meeting</option>
+          </select>
+        </div>
+        <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+          <button type="button" class="btn-secondary" onclick="closeModal('modalNewQuest')">Cancel</button>
+          <button type="submit" class="btn-primary">Add Quest</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── MODAL: AUTHENTICATION ── -->
+  <div class="modal-backdrop" id="modalAuth">
+    <div class="modal-content">
+      <div class="card-title">
+        <span>🧙‍♂️ Adventurer Profile</span>
+        <button class="btn-icon-action" onclick="closeModal('modalAuth')">✕</button>
+      </div>
+      <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">
+        You are currently operating in <strong>Live Demo Adventurer</strong> mode. All telemetry, scores, and quests are persisted to your PostgreSQL / SQLite database in real-time.
+      </div>
+      <div style="display: flex; gap: 0.5rem;">
+        <button class="btn-primary" style="flex: 1;" onclick="autoDemoLogin(); closeModal('modalAuth'); showToast('Refreshed Adventurer session!');">
+          Re-authenticate Session
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
