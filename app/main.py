@@ -24,14 +24,27 @@ from app.api.ai import router as ai_router
 from app.api.voice import router as voice_router
 
 
+import logging
+
+logger = logging.getLogger(__name__)
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Create tables on startup (dev only — use Alembic in production)
-    if settings.is_development:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+    # Safe database table initialization on startup (skip blocking in serverless cold starts)
+    if not settings.is_vercel:
+        try:
+            import asyncio
+            async with asyncio.timeout(3.0):
+                async with engine.begin() as conn:
+                    await conn.run_sync(Base.metadata.create_all)
+        except Exception as e:
+            logger.warning("Database schema check skipped during startup: %s", e)
     yield
-    await engine.dispose()
+    try:
+        await engine.dispose()
+    except Exception:
+        pass
 
 
 app = FastAPI(
@@ -41,10 +54,13 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# CORS configuration
+cors_origins = settings.cors_origins
+allow_all = "*" in cors_origins
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.cors_origins,
+    allow_origins=cors_origins if not allow_all else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -52,20 +68,29 @@ app.add_middleware(
 
 import os
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse
+from fastapi.responses import HTMLResponse, FileResponse
 
 # Root directory for static assets
 STATIC_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static")
+if not os.path.exists(STATIC_DIR):
+    alt = os.path.join(os.getcwd(), "app", "static")
+    if os.path.exists(alt):
+        STATIC_DIR = alt
+
 if os.path.exists(STATIC_DIR):
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 
-# Root endpoint: Serves interactive Web UI to browsers, JSON to API clients
+# Root endpoint: Serves interactive Web UI to browsers, JSON fallback
 @app.get("/", tags=["root"])
 async def root():
     index_file = os.path.join(STATIC_DIR, "index.html")
     if os.path.exists(index_file):
-        return FileResponse(index_file)
+        try:
+            with open(index_file, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read())
+        except Exception:
+            return FileResponse(index_file)
     return {
         "status": "ok",
         "service": "Real-Life Dungeon Master API",

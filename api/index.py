@@ -11,3 +11,6 @@ if BASE_DIR not in sys.path:
     sys.path.insert(0, BASE_DIR)
 
 from app.main import app  # noqa: E402, F401
+
+# WSGI/ASGI handler export for Vercel Python runtime
+handler = app

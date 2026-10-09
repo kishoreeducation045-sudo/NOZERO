@@ -48,16 +48,34 @@ class Settings(BaseSettings):
         return val
 
     @property
+    def is_vercel(self) -> bool:
+        import os
+        return bool(os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"))
+
+    @property
     def is_development(self) -> bool:
         return self.app_env == "development"
 
     @property
     def normalized_database_url(self) -> str:
         """Ensure PostgreSQL connection strings use asyncpg driver and clean incompatible params."""
+        import os
         url = self.database_url.strip()
-        # Graceful fallback to SQLite if password placeholder is left unchanged
-        if "YOUR_PASSWORD" in url or "[YOUR-PASSWORD]" in url or "<password>" in url:
+        is_serverless = self.is_vercel
+
+        # Graceful fallback to SQLite if password placeholder or localhost in serverless
+        if ("YOUR_PASSWORD" in url or "[YOUR-PASSWORD]" in url or "<password>" in url or 
+            (is_serverless and ("localhost" in url or "127.0.0.1" in url))):
+            if is_serverless:
+                return "sqlite+aiosqlite:////tmp/questlog.db"
             return "sqlite+aiosqlite:///./questlog.db"
+
+        if url.startswith("sqlite"):
+            if is_serverless and not url.startswith("sqlite+aiosqlite:////tmp"):
+                return "sqlite+aiosqlite:////tmp/questlog.db"
+            if not url.startswith("sqlite+aiosqlite://"):
+                url = url.replace("sqlite://", "sqlite+aiosqlite://")
+            return url
 
         if url.startswith("postgresql://"):
             url = "postgresql+asyncpg://" + url[len("postgresql://"):]
